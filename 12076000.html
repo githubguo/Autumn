@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="origin" />
+    <meta name="description" content="企业服务架构图及负载均衡的要求 场景说明 • 在企业生产环境中，每天会有很多的需求变更，比如增加服务器、新业务上线、url路由修改、域名配置等等，对于前端负载均衡设备来说，容易维护，复杂度低，是首选指" />
+    <meta property="og:description" content="企业服务架构图及负载均衡的要求 场景说明 • 在企业生产环境中，每天会有很多的需求变更，比如增加服务器、新业务上线、url路由修改、域名配置等等，对于前端负载均衡设备来说，容易维护，复杂度低，是首选指" />
+    <meta http-equiv="Cache-Control" content="no-transform" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>HAProxy之一----HAPproxy配置参数详解 - 一叶知秋~~ - 博客园</title>
+    <link id="favicon" rel="shortcut icon" href="//common.cnblogs.com/favicon.svg" type="image/svg+xml" />
+    
+    <link rel="stylesheet" href="/css/blog-common.min.css?v=6JQ5RoSW47wdSknXXH8GKp7Dudlx3LJTMZSly7f9Sb8" />
+    <link id="MainCss" rel="stylesheet" href="/skins/codinglife/bundle-codinglife.min.css?v=ZcsNxaXizONM0PxWUxZoQVFreiO1XqTRORYLY6_b6KE" />
+    <link type="text/css" rel="stylesheet" href="https://www.cnblogs.com/struggle-1216/custom.css?v=PG1U/VYRV6qWWovFaUY346XzimA=" />
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="/skins/codinglife/bundle-codinglife-mobile.min.css?v=d8oT3nlIVvFUyxJxaSh1MCY4RVJKUygqMHtcZgLLLr4" />
+    
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/struggle-1216/rss" />
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/struggle-1216/rsd.xml" />
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/struggle-1216/wlwmanifest.xml" />
+    <script>
+        var currentBlogId = 542898;
+        var currentBlogApp = 'struggle-1216';
+        var cb_enable_mathjax = false;
+        var isLogined = false;
+        var isBlogOwner = false;
+        var skinName = 'CodingLife';
+        var visitorUserId = '';
+    </script>
+        <script>
+            var currentPostDateAdded = '2019-12-28 06:50';
+        </script>
+    <script src="https://common.cnblogs.com/scripts/jquery-2.2.0.min.js"></script>
+    <script src="/js/blog-common.min.js?v=axatFUhM5xrj94lhxXsErZO3taWT5cDvo4CrfxgVV7A"></script>
+    
+    
+    
+</head>
+<body class="no-navbar">
+    <a name="top"></a>
+        <div id="bannerbar" class="formobile">
+            <a href="https://brands.cnblogs.com/aws/free?source=mobile-banner" target="_blank" onclick="ga('send', 'event', 'Link', 'click', 'aws-mobile-bannerbar')"><img src="https://img2020.cnblogs.com/blog/35695/202011/35695-20201104135303888-13496776.png" alt="" /></a>
+        </div>
+    <div id="top_nav" class="navbar navbar-custom">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding"><a href="https://www.cnblogs.com/" title="开发者的网上家园"><img src="/images/logo.svg?v=R9M0WmLAIPVydmdzE2keuvnjl-bPR7_35oHqtiBzGsM" alt="博客园Logo" /></a></li>
+                <li><a href="/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-sitehome')">首页</a></li>
+                <li><a href="https://news.cnblogs.com/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-news')">新闻</a></li>
+                <li><a href="https://q.cnblogs.com/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-q')">博问</a></li>
+                <li><a id="nav_brandzone" href="https://brands.cnblogs.com/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-brands')">专区</a></li>
+                <li><a href="https://ing.cnblogs.com/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-ing')">闪存</a></li>
+                    <li><a href="https://edu.cnblogs.com/" onclick="ga('send', 'event', 'Link', 'click', 'skin-navbar-edu')">班级</a></li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search" action="https://zzk.cnblogs.com/s" method="get">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="text" tabindex="3" />
+                        <button type="submit" id="zzk_search_button">
+                            <img src="/images/aggsite/search.svg" alt="搜索" />
+                        </button>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx" alt="我的博客" title="我的博客">
+                        <img id="myblog_icon" class="navbar-icon" src="/images/aggsite/myblog.svg" alt="我的博客" />
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息">
+                        <img id="msg_icon" class="navbar-icon" src="/images/aggsite/message.svg?v=oS4PkibyMjZ9rGD5XAcLt99uW_s76Javy2up4dbnZNY" alt="短消息" />
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="/images/aggsite/avatar-default.svg" alt="用户头像" />
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="javascript:void(0)" onclick="logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup/">注册</a>
+                    <a class="navbar-anonymous" href="javascript:void(0);" onclick="login()">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    
+    <!--done-->
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+        <a id="lnkBlogLogo" href="https://www.cnblogs.com/struggle-1216/"><img id="blogLogo" src="/skins/custom/images/logo.gif" alt="返回主页" /></a>		
+		
+<!--done-->
+<h1><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/struggle-1216/">一叶知秋~~</a>
+</h1>
+<h2>
+
+</h2>
+
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+<li>
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/struggle-1216/">
+首页</a>
+</li>
+<li>
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+<li>
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/%E4%B8%80%E5%8F%B6%E7%9F%A5%E7%A7%8B~~">
+联系</a></li>
+<li>
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/struggle-1216/rss/">
+订阅</a>
+<!--<partial name="./Shared/_XmlLink.cshtml" model="Model" /></li>--></li>
+<li>
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+
+		<div class="blogStats">
+			<span id="stats_post_count">随笔 - 
+204&nbsp; </span>
+<span id="stats_article_count">文章 - 
+0&nbsp; </span>
+<span id="stats-comment_count">评论 - 
+5</span>
+
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		<div id="post_detail">
+    <!--done-->
+    <div id="topics">
+        <div class="post">
+            <h1 class = "postTitle">
+                
+<a id="cb_post_title_url" class="postTitle2 vertical-middle" href="https://www.cnblogs.com/struggle-1216/p/12076000.html">
+    <span>HAProxy之一----HAPproxy配置参数详解</span>
+    
+
+
+</a>
+
+            </h1>
+            <div class="clear"></div>
+            <div class="postBody">
+                
+<div id="cnblogs_post_body" class="blogpost-body">
+    <h2 id="auto_id_0">企业服务架构图及负载均衡的要求</h2>
+<p><strong>场景说明</strong></p>
+<p>• 在企业生产环境中，每天会有很多的需求变更，比如增加服务器、新业务上线、url路由修改、域名配置等等，对于前端负载均衡设备来说，容易维护，复杂度低，是首选指标。在企业中，稳定压倒一切，与其搞得很复杂，经常出问题，不如做的简单和稳定。</p>
+<p>• 在企业中，90%以上的故障，来源于需求变更。可能是程序bug，也可能是人为故障，也可能是架构设计问题等等。</p>
+<p>• 前端负载均衡设备为重中之重，在软件选型上一定充分考虑，能满足业务的前提下，尽可能降低复杂度，提高易维护性</p>
+<h2>小型架构图</h2>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221113236617-1473079656.png" alt="" width="825" height="481"></p>
+<h2>中型架构图</h2>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221113313480-680921057.png" alt="" width="913" height="558"></p>
+<h2>公有云Web架构</h2>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221113410810-1627155205.png" alt=""></p>
+<h2>私有云web架构</h2>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221113432055-615784980.png" alt="" width="898" height="617"></p>
+<h2>什么是负载均衡：</h2>
+<p>•负载均衡(Load Balance，简称LB)是一种服务或基于硬件设备等实现的高可用反向代理技术，负载均衡将特定的业务(web服务、网络流量等)分担给指定的一个或多个后端特定的服务器或设备，从而提高了公司业务的并发处理能力、保证了业务的高可用性、方便了业务后期的水平动态扩展。</p>
+<p>•https://yq.aliyun.com/articles/1803#阿里云SLB介绍</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221113601766-893352749.png" alt="" width="835" height="312"></p>
+<h2>为什么使用负载均衡：</h2>
+<p>•Web服务器的动态水平扩展<br>&nbsp; •对用户无感知</p>
+<p>•增加业务并发访问及处理能力<br>&nbsp; •解决单服务器瓶颈问题</p>
+<p>•节约公网IP地址<br>&nbsp; •降低IT支出成本</p>
+<p>•隐藏内部服务器IP<br>&nbsp; •提高内部服务器安全性</p>
+<p>•配置简单<br>&nbsp; •固定格式的配置文件</p>
+<p>•功能丰富<br>&nbsp; •支持四层和七层，支持动态下线主机</p>
+<p>•性能较强<br>&nbsp; •并发数万甚至数十万</p>
+<h3>常见有哪些负载均衡：</h3>
+<p><strong>•软件负载：</strong></p>
+<p>•四层：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•LVS(Linux Virtual Server)
+•HAProxy(High Availability Proxy)
+•Nginx()
+•……</pre>
+</div>
+<p>•七层：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•HAProxy
+•Nginx
+•……</pre>
+</div>
+<p><strong>•硬件负载：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•F5
+•Netscaler
+•……</pre>
+</div>
+<h3>典型应用场景：</h3>
+<p><strong>•应用场景：</strong></p>
+<p>•四层：Redis、Mysql、RabbitMQ、Memcache等</p>
+<p>•七层：Nginx、Tomcat、Apache、PHP、图片、动静分离、API等</p>
+<p><strong>四层和七层负载均衡的区别</strong></p>
+<p><strong>四层：</strong></p>
+<p>通过分析<strong>IP层及TCP/UDP层</strong>的流量实现的<strong>基于"IP+端口"</strong>的负载均衡。</p>
+<p><strong>七层：</strong></p>
+<p>可以根据内容，再配合负载均衡算法来选择后端服务器，<strong>不但可以根据"ip+端口"方式</strong>进行负载分流，还可以根据<strong>网站的URL，访问域名，浏览器类别，语言</strong>等决定负载均衡的策略。<strong>七层</strong>负载均衡模式下，<strong>负载均衡与客户端及后端的服务器会分别建立一次TCP连接</strong>，而在<strong>四层</strong>负载均衡模式下(DR)，<strong>仅建立一次TCP连接</strong>；七层负载均衡对负载均衡设备的要求更高，处理能力也低于四层负载均衡。</p>
+<h2><strong>Haproxy介绍</strong></h2>
+<p><strong>1、简单介绍</strong></p>
+<p>•HAProxy: 是法国人Willy Tarreau开发的一个开源软件，是一款应对客户端10000以上的同时连接的高性能的TCP和HTTP负载均衡器。其功能是用来提供基于cookie的持久性，基于内容的交换，过载保护的高级流量管制，自动故障切换，以正则表达式为基础的控制运行时间，基于Web的报表，高级日志记录以帮助排除故障的应用或网络及其他功能。</p>
+<p>•LB Cluster:<br>四层：lvs, nginx(stream)，haproxy(mode tcp)<br>七层：http: nginx(http), haproxy(mode http), httpd...</p>
+<p>•官网：<br>http://www.haproxy.org<br>https://www.haproxy.com</p>
+<p>•文档：https://cbonte.github.io/haproxy-dconv/</p>
+<p>&nbsp;</p>
+<p><strong>2、定义</strong></p>
+<p>（1）HAProxy是一个使用<strong>C语言编写</strong>的自由及开放源代码软件，其提供高性能性、负载均衡，以及基于TCP和HTTP的应用程序代理。相较与 Nginx，HAProxy&nbsp;<strong>更专注与反向代理</strong>，因此它可以支持<strong>更多的选项</strong>，<strong>更精细的控制</strong>，<strong>更多的健康状态检测机制</strong>和<strong>负载均衡算法</strong><strong>。</strong></p>
+<p>（2）HAProxy特别适用于那些<strong>负载特大的web站点</strong>，<strong>这些站点</strong>通常又<strong>需要会话保持或七层处理</strong>。HAProxy运行在当前的硬件上，完全可以<strong>支持数以万计的并发连接</strong>。并且它的运行模式使得它可以很简单安全的整合进您当前的架构中， 同时可以保护你的web服务器不被暴露到网络上。</p>
+<p>（3）包括 GitHub、Bitbucket、Stack Overflow、Reddit、Tumblr、Twitter在内众多知名网站，及亚马逊网络服务系统都使用了HAProxy</p>
+<p>&nbsp;</p>
+<p>3、<strong>HAProxy功能</strong></p>
+<p>•HAProxy是TCP / HTTP反向代理服务器，尤其适合于高可用性高并发环境</p>
+<p>•可以针对HTTP请求添加cookie，进行路由后端服务器</p>
+<p>•可平衡负载至后端服务器，并支持持久连接</p>
+<p>•支持基于cookie进行调度</p>
+<p>•支持所有主服务器故障切换至备用服务器</p>
+<p>•支持专用端口实现监控服务</p>
+<p>•支持不影响现有连接情况下停止接受新连接请求</p>
+<p>•可以在双向添加，修改或删除HTTP报文首部</p>
+<p>•支持基于pattern实现连接请求的访问控制</p>
+<p>•通过特定的URI为授权用户提供详细的状态信息</p>
+<p><strong>•历史版本更新功能：1.4 1.5 1.6 1.7 1.8 1.9 2.0-dev</strong></p>
+<p>•1.8：多线程，HTTP/2缓存……</p>
+<p>•1.7：服务器动态配置，多类型证书……</p>
+<p>•1.6：DNS解析支持，HTTP连接多路复用……</p>
+<p>•1.5：开始支持SSL，IPV6，keepalived……</p>
+<p>&nbsp;</p>
+<p><strong>4、Haproxy的特性</strong></p>
+<p>①&nbsp;<strong>可靠性与稳定性</strong>都非常出色，可与硬件级设备媲美。</p>
+<p>②&nbsp;<strong>支持连接拒绝</strong>，可以用于防止DDoS攻击</p>
+<p>③&nbsp;<strong>支持长连接、短连接和日志功能</strong>，可根据需要<strong>灵活配置</strong></p>
+<p>④ 路由HTTP请求到后端服务器,基于<strong>cookie作会话绑定</strong>；同时<strong>支持</strong>通过获取指的<strong>url来检测后端服务器的状态</strong></p>
+<p>⑤ HAProxy还拥有功能强大的<strong>ACL支持</strong>，可<strong>灵活配置路由功能，实现动静分离</strong>，在架构设计与实现上带来很大方便</p>
+<p>⑥&nbsp;<strong>可支持四层和七层负载均衡</strong>，几乎能为所有服务常见的提供负载均衡功能</p>
+<p>⑦ 拥有功能强大的<strong>后端服务器的状态监控web页面</strong>，可以实时了解设备的运行状态，还<strong>可实现设备上下线等简单操作</strong>。例：cobbler、samba、httpd</p>
+<p>⑧&nbsp;<strong>支持多种负载均衡调度算法，并且也支持session保持</strong>。</p>
+<p>&nbsp;</p>
+<p><strong>5、Haproxy安装方式</strong></p>
+<p>（1）Haproxy安装常用两种方式，yum安装和源码包安装</p>
+<p>（2）yum 安装：通常是在线安装，好处是安装方式简单，不易出错；常用的安装yum源为epel</p>
+<p>（3）源码包安装：是先将 Haproxy 的源码下载下来，在自己的系统里编译生成可执行文件，然后执行，好处是因为是在自己的系统上编译的，更符合自己系统的性能，也就是说在自己的系统上执行 Haproxy服务性能效率更好。</p>
+<p>（4）区别：<strong>路径和启动方式不同，支持的模块也不同</strong>。</p>
+<h3><strong>&nbsp; yum 安装方式：</strong></h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos7~]#yum install haproxy
+</pre>
+</div>
+<h3>&nbsp;源码编译HAProxy：　　</h3>
+<p><strong>&nbsp;官网下载HAProxy包，并解压包，切换到haproxy包目录下</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos17haproxy-1.8.20]#tar xvf haproxy-1.8.20.tar.gz &amp;&amp; cd haproxy-1.8.20
+</pre>
+</div>
+<p>&nbsp;安装相关依赖包</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos17haproxy-1.8.20]#yum install gcc gcc-c++ glibc glibc-devel pcrepcre-devel openssl openssl-devel systemd-devel net-tools vim iotopbczip unzip zlib-devellrzsztree screen lsof tcpdump wget ntpdate
+</pre>
+</div>
+<p>&nbsp; 开始编译</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos17haproxy-1.8.20]#make ARCH=x86_64 TARGET=linux2628 USE_PCRE=1 USE_OPENSSL=1 USE_ZLIB=1 USE_SYSTEMD=1 USE_CPU_AFFINITY=1 PREFIX=/usr/local/haproxy
+</pre>
+</div>
+<p>&nbsp; 指定安装路径</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos17haproxy-1.8.20]#make install PREFIX=/usr/local/haproxy
+</pre>
+</div>
+<p>&nbsp; 将可执行程序haproxy复制/usr/sbin/目录下</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos17haproxy-1.8.20]#cp haproxy  /usr/sbin/
+</pre>
+</div>
+<p>　创建haproxy启动脚本　<strong>vim&nbsp; /usr/lib/systemd/system/haproxy.service</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[Unit]
+Description=HAProxy Load Balancer
+After=syslog.target network.target
+
+[Service]
+ExecStartPre=/usr/sbin/haproxy -f /etc/haproxy/haproxy.cfg   -c -q
+ExecStart=/usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg   -p /run/haproxy.pid
+ExecReload=/bin/kill -USR2 $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+</pre>
+</div>
+<p>&nbsp;创建启动脚本目录</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#mkdir /etc/haproxy</pre>
+</div>
+<p>创建haproxy服务启动目录及基本的配置文件</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#vim /etc/haproxy/haproxy.cfg 
+global
+maxconn 100000
+chroot /usr/local/haproxy
+#stats socket /var/lib/haproxy/haproxy.sock mode 600 level admin
+user haproxy
+group haproxy
+daemon
+nbproc 2   绑定两个cpu就开启下面两个，绑定四个就开启四个
+cpu-map 1 0
+cpu-map 2 1
+#cpu-map 3 2
+#cpu-map 4 3
+pidfile /run/haproxy.pid
+log 127.0.0.1 local3 info
+
+defaults
+option http-keep-alive
+option  forwardfor
+maxconn 100000
+mode http
+timeout connect 300000ms
+timeout client  300000ms
+timeout server  300000ms
+
+listen stats
+ mode http
+ bind 0.0.0.0:9999
+ stats enable
+ log global
+ stats uri     /haproxy-status
+ stats auth    haadmin:q1w2e3r4ys
+
+listen  web_port
+ bind 0.0.0.0:80
+ mode http
+ log global
+ server web1  127.0.0.1:8080  check inter 3000 fall 2 rise 5
+</pre>
+</div>
+<p>&nbsp;创建一个haproxy用户，并设置为系统不能登录的shell类型</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#useradd -s /sbin/nologin haproxy</pre>
+</div>
+<p>&nbsp;启动haproxy服务</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#systemctl start haproxy
+</pre>
+</div>
+<p>&nbsp;查看haproxy启动的线程数</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#ps -ef |grep haproxy  可以看到此时用户名是nobody启动双线程，并都属于一个父进程
+root 13270 1 0 21:59 ? 00:00:00 /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid
+haproxy 13272 13270 0 21:59 ? 00:00:00 /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid
+haproxy 13273 13270 0 21:59 ? 00:00:00 /usr/sbin/haproxy -Ws -f /etc/haproxy/haproxy.cfg -p /run/haproxy.pid
+root 13278 12621 0 21:59 pts/0 00:00:00 grep --color=auto haproxy</pre>
+</div>
+<h2>HAProxy组成</h2>
+<p>程序环境：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">主程序：/usr/sbin/haproxy
+配置文件：/etc/haproxy/haproxy.cfg
+Unit file：/usr/lib/systemd/system/haproxy.service</pre>
+</div>
+<p><strong>配置段：</strong></p>
+<p><strong>global：全局配置段</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">进程及安全配置相关的参数
+性能调整相关参数
+Debug参数</pre>
+</div>
+<p><strong>&nbsp;proxies：代理配置段</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">defaults：为frontend, backend, listen提供默认配置
+frontend：前端，相当于nginx中的server {}
+backend：后端，相当于nginx中的upstream {}
+listen：同时拥有前端和后端配置
+</pre>
+</div>
+<p><strong> 简单的配置示例：在vim /etc/haproxy/haproxy.cfg配置文件中修改</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">frontend web
+bind 192.168.37.17:80  本机haproxy的IP地址
+default_backend websrvs
+
+backend websrvs
+balance roundrobin
+server srv1 172.16.100.6:80  后台服务的IP地址
+server srv2 172.16.100.7:80 
+</pre>
+</div>
+<p><strong>&nbsp; listen用法：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen web
+        bind 192.168.37.17:80
+        server web1 192.168.37.27:80</pre>
+</div>
+<p>&nbsp; 访问网页：</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191221225652409-1470832930.png" alt="" width="466" height="88"></p>
+<h2>&nbsp;Haproxy配置-global</h2>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•chroot  #锁定运行目录
+•deamon  #以守护进程运行
+•#stats socket /var/lib/haproxy/haproxy.sock  mode 600 level admin   #socket文件
+•user, group, uid, gid  #运行haproxy的用户身份
+•nbproc   #开启的haproxy进程数，与CPU保持一致
+•nbthread  #指定每个haproxy进程开启的线程数，默认为每个进程一个线程
+•cpu-map 1 0 #绑定haproxy进程至指定CPU
+•maxconn    #每个haproxy进程的最大并发连接数
+•maxsslconn  #SSL每个haproxy进程ssl最大连接数
+•maxconnrate  #每个进程每秒最大连接数
+•spread-checks #后端server状态check随机提前或延迟百分比时间，建议2-5(20%-50%)之间，成百上千个后端服务器可加此选项。
+•pidfile#指定pid文件路径
+•log 127.0.0.1 local3 info #定义全局的syslog服务器；最多可以定义两个
+</pre>
+</div>
+<h3>自定义haproxy的log日志</h3>
+<p>1、在rsyslog.conf配置配置文件中开启log日志功能。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#vim /etc/rsyslog.conf<br>
+$ModLoad imudp   开启udp模式存放日志
+$UDPServerRun 514 开启端口
+local3.*                                                /var/log/haproxy.log  存放haproxy日志路径
+</pre>
+</div>
+<p>&nbsp;修改完rsyslog配置文件之后重新启动：<strong>systemctl restart rsyslog</strong></p>
+<p>&nbsp;2、在haproxyd的global全局配置文件中修改对应的local3</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">log 127.0.0.1 local3 
+</pre>
+</div>
+<p>配置完之后重新启动haproxy服务：<strong>systemctl restart haproxy　　</strong></p>
+<p>3、验证结果，此时修改后的配置文件中已经生成单独的log日志文件。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17haproxy]#tail /var/log/haproxy.log 
+Dec 22 00:03:19 localhost haproxy[15460]: Proxy stats started.
+Dec 22 00:03:19 localhost haproxy[15460]: Proxy web_port started.</pre>
+</div>
+<h2>HAProxy Proxies配置</h2>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•defaults [&lt;name&gt;] #默认配置项，针对以下的frontend、backend和lsiten生效，可以多个name
+•frontend &lt;name&gt; #前端servername，类似于Nginx的一个虚拟主机server。
+•backend &lt;name&gt; #后端服务器组，等于nginx的upstream
+•listen &lt;name&gt; #将frontend和backend合并在一起配置</pre>
+</div>
+<p><strong>&nbsp;注：name字段只能使用”-”、”_”、”.”、和”:”，并且严格区分大小写，例如：Web和web是完全不同的两组服务器。</strong></p>
+<h3><strong>Proxies配置-defaults</strong></h3>
+<p><strong>defaults 配置参数：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•option redispatch   #当server Id对应的服务器挂掉后，强制定向到其他健康的服务器
+•option abortonclose  #当服务器负载很高的时候，自动结束掉当前队列处理比较久的链接
+•option http-keep-alive 60  #开启会话保持
+•option forwardfor   #开启IP透传
+•mode http   #默认工作类型
+•timeout connect 60s  #转发客户端请求到后端server的最长连接时间(TCP之前)
+•timeout server 600s  #转发客户端请求到后端服务端的超时超时时长（TCP之后）
+•timeout client 600s  #与客户端的最长空闲时间
+•timeout http-keep-alive 120s  #session 会话保持超时时间，范围内会转发到相同的后端服务器
+•#timeout check 5s  #对后端服务器的检测超时时间</pre>
+</div>
+<h3>Proxies配置-frontend配置参数</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•bind：指定HAProxy的监听地址，可以是IPV4或IPV6，可以同时监听多个IP或端口，可同时用于listen字段中
+•bind [&lt;address&gt;]:&lt;port_range&gt; [, ...] [param*]
+•mode http/tcp #指定负载协议类型
+•use_backend backend_name #调用的后端服务器组名称</pre>
+</div>
+<p><strong>&nbsp;bind指令</strong>仅能用于<strong>frontend和listen</strong>区段，用于定义一个或几个监听的套接字。</p>
+<p>① &lt;address&gt;：可选选项，其可以为<strong>主机名、IPv4地址</strong>、IPv6地址或*；省略此选项、将其指定为<strong>*或0.0.0.0</strong>时，将监听当前系统的所有IPv4地址；</p>
+<p>② &lt;port_range&gt;：可以是一个特定的TCP<strong>端口</strong>，也可是一个端口范围(如5005-5010)，代理服务器将通过指定的端口来接收客户端请求；需要注意的是，每组监听的套接字</p>
+<p>③ &lt;address:port&gt;在同一个实例上只能使用一次，而且小于1024的端口需要有特定权限的用户才能使用，这可能需要通过uid参数来定义；</p>
+<p>④ &lt;interface&gt;：指定<strong>物理接口</strong>的名称，仅能在Linux系统上使用；其不能使用接口别名，而仅能使用物理接口名称，而且只有管理有权限指定绑定的物理接口；</p>
+<p><strong>&nbsp;示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•frontend WEB_PORT
+•bind :80,:8080
+•bind 192.168.7.102:10080,192.168.7.102:10043
+•use_backend backend_name</pre>
+</div>
+<h3>Proxies配置-backend配置参数</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•mode http/tcp #指定负载协议类型
+•option #配置选项
+•server #定义后端realserver</pre>
+</div>
+<p><strong>&nbsp;注意：option后面加httpchk，smtpchk, mysql-check, pgsql-check，ssl-hello-chk方法，可用于实现更多应用层检测功能。</strong></p>
+<p><strong>&nbsp;示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•frontend WEB_PORT
+•bind :80,:8080
+•bind 192.168.7.102:10080,192.168.7.102:10043
+•use_backend backend_name
+</pre>
+</div>
+<h3>后端服务器状态监测及相关配置</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•check #对指定real进行健康状态检查，默认不开启
+•addr IP  #可指定的健康状态监测IP
+•port num  #指定的健康状态监测端口
+•inter num  #健康状态检查间隔时间，默认2000 ms
+•fall num  #后端服务器失效检查次数，默认为3
+•rise num  #后端服务器从下线恢复检查次数，默认为2
+•weight #默认为1，最大值为256，0表示不参与负载均衡
+•backup #将后端服务器标记为备份状态
+•disabled #将后端服务器标记为不可用状态
+•redirect prefix http://www.magedu.com   #将请求临时重定向至其它URL，只适用于http模式
+•maxconn &lt;maxconn&gt;：当前后端server的最大并发连接数
+•backlog &lt;backlog&gt;：当server的连接数达到上限后的后援队列长度　</pre>
+</div>
+<p><strong><span style="color: rgba(255, 0, 0, 1)">（mode http|tcp|health）</span>设定实例的运行模式或协议</strong>。当实现内容交换时，<strong>前端和后端必须工作于同一种模式</strong>(一般说来都是HTTP模式)，否则将无法启动实例。可以放在任何4段中 default frontent backent listen</p>
+<p>①&nbsp;<strong>tcp</strong>：实例运行于<strong>纯TCP模式</strong>，在客户端和服务器端之间将建立一个全双工的连接，且<strong>不会对7层报文做任何类型的检查</strong>，通常用于SSL、SSH、SMTP等应用；</p>
+<p>②&nbsp;<strong>http</strong>：实例运行于HTTP模式，7层，客户端请求在转发至后端服务器之前将被深度分析，所有不与RFC格式兼容的请求都会被拒绝；<strong>centos实际默认模式</strong></p>
+<p>③&nbsp;<strong>health</strong>：实例工作于health模式，其对入站请求<strong>仅响应"OK"信息并关闭连接</strong>，且不会记录任何日志信息；此模式将用于响应外部组件的健康状态检查请求；目前来讲，此模式已经废弃，因为tcp或http模式中的monitor关键字可完成类似功能；可以用于测试</p>
+<p><strong>&nbsp; 示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen web
+        mode http
+        bind 192.168.37.17:80
+        server web1 192.168.37.27:80 check weight 3  inter 3s fall 3 rise 5 #check后面命令是对haproxy进行状态检测
+        server web2 192.168.37.37:80 check inter 3s fall 3 rise 5 backup
+        redirect prefix http://www.magedu.com    临时重定向，只适用于http模式
+</pre>
+</div>
+<h3>&nbsp;frontend/ backend及Proxies配置-listen配置案例</h3>
+<p>&nbsp;使用listen替换frontend和backend的配置方式：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">#官网业务访问入口======================================
+frontend WEB_PORT_80
+        bind 192.168.37.17:80
+        mode tcp
+        use_backend web_prot_http_nodes
+backend web_prot_http_nodes
+        mode http
+        option forwardfor
+        server 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server 192.168.37.37:80 check inter 3000 fall 3 rise 5
+
+frontend WEB_PORT_443
+        bind 192.168.37.17:443
+        mode tcp
+        use_backend web_prot_http_nodes
+backend web_prot_http_nodes
+        mode http
+        option forwardfor
+        server  192.168.37.27:443 check inter 3000 fall 3 rise 5
+        server  192.168.37.37:443 check inter 3000 fall 3 rise 5
+
+#官网业务访问入口=====================================
+listen WEB_PORT_80
+        bind 192.168.37.17:80
+        mode tcp
+        option forwardfor
+        server web1 192.168.37.17:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.27:80 check inter 3000 fall 3 rise 5
+
+listen WEB_PORT_443
+        bind 192.168.37.17:443
+        mode tcp
+        option forwardfor
+        server web1 192.168.37.27:443 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:443 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223103347241-1304571026.png" alt="" width="730" height="682"></p>
+<h2>HAProxy 调度算法&nbsp;</h2>
+<p>balance：指明对后端服务器的调度算法，配置在listen或backend</p>
+<p><strong>静态算法：</strong>按照事先定义好的规则轮询公平调度，不关心后端服务器的当前负载、链接数和相应速度等，且无法实时修改权重，只能重启后生效。</p>
+<p>•static-rr：基于权重的轮询调度，<strong>不支持权重的运行时调整及后端服务器慢启动</strong>，其后端主机数量没有限制</p>
+<p>•first：根据服务器在列表中的位置，自上而下进行调度，但是其只会当第一台服务器的连接数达到上限，新请求才会分配给下一台服务，因此会忽略服务器的权重设置。</p>
+<p><strong>&nbsp;first示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">#官网业务访问入口=====================================
+listen WEB_PORT_80
+        bind 192.168.37.17:80
+        balance first
+        mode tcp
+        option forwardfor
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;测试效果，先只会访问第一台服务器，当达到最大连接数，才会访问到第二台服务器。</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223110841988-282919707.png" alt="" width="680" height="152"></p>
+<p><strong>动态算法：</strong>基于后端服务器状态进行调度适当调整，比如优先调度至当前负载较低的服务器，且权重可以在haproxy运行时动态调整无需重启。</p>
+<p>roundrobin：基于权重的轮询动态调度算法，<strong>支持权重的运行时调整</strong>，不等于lvs 的rr，<strong>支持慢启动</strong>即新加的服务器会逐渐增加转发数，每个后端backend中最多支持4095个server，此为默认调度算法，server 权重设置weight。</p>
+<p>leastconn：加权的最少连接的动态，<strong>支持权重的运行时调整和慢启动</strong>，即当前后端服务器连接最少的优先调度，比较适合长连接的场景使用，比如MySQL等场景，其并不太适用于较短会话的应用层协议。</p>
+<p><strong>roundrobin示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen WEB_PORT_80
+        bind 192.168.37.17:80
+        #balance first
+        balance roundrobin  默认是此算法
+        mode tcp
+        option forwardfor
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p><strong>hash 算法</strong></p>
+<p><strong>source：</strong>源地址hash，基于用户源地址hash并将请求转发到后端服务器，默认为静态即取模方式，但是可以通过hash-type支持的选项更改，后续同一个源地址请求将被转发至同一个后端web服务器，比较适用于session保持/缓存业务等场景，<strong>用法不多。</strong><br>•map-based：取模法，基于服务器权重的hash数组取模，该hash是静态的即不支持在线调整权重，不支持慢启动，其对后端服务器调度均衡，缺点是当服务器的总权重发生变化时，即有服务器上线或下线，都会因权重发生变化而导致调度结果整体改变，<strong>hash（o）mod&nbsp; n（其中n代表是有几个权重）。</strong></p>
+<p><strong>1、source：</strong>源地址hash，基于用户源地址hash并将请求转发到后端服务器，默认为静态即取模方式，但是可以通过hash-type支持的选项更改，后续同一个源地址请求将被转发至同一个后端web服务器，比较适用于session保持/缓存业务等场景。<br><strong>2、consistent：</strong>一致性哈希，该hash是动态的，支持在线调整权重，支持慢启动，优点在于当服务器的总权重发生变化时，对调度结果影响是局部的，不会引起大的变动。</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223115717935-2094633267.png" alt="" width="847" height="384"></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen web_prot_http_nodes
+  　bind 192.168.7.101:80
+　　mode http
+　　balance source
+　　hash-type consistent
+　　log global
+　　option forwardfor
+　　server 192.168.7.101 192.168.7.101:8080 check inter 3000 fall 3 rise 5
+　　server 192.168.7.102 192.168.7.102:8080 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p><strong>3、uri：基于对用户请求的uri做hash并将请求转发到后端指定服务器，<strong>适用于后端缓存服务器</strong></strong></p>
+<p><strong><strong>&nbsp;对<strong>URI 的左半部分</strong>或<strong>整个uri</strong>&nbsp;做hash 计算，并除以服务器总权重取模</strong></strong></p>
+<p><strong>&nbsp;左半部分：/&lt;path&gt;;&lt;params&gt;</strong></p>
+<p><strong>&nbsp;整个uri ：/&lt;path&gt;;&lt;params&gt;?&lt;query&gt;#&lt;frag&gt;</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">map-based：取模法
+consistent：一致性哈希
+http://example.org/absolute/URI/with/absolute/path/to/resource.txt #URI/URL
+ftp://example.org/resource.txt #URI/URL
+/relative/URI/with/absolute/path/to/resource.txt #URI</pre>
+</div>
+<p>uri: uniform resource identifier，统一资源标识符,是一个用于标识某一互联网资源名称的字符串</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223121751870-2086123098.png" alt="" width="678" height="263"></p>
+<p><strong>示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen WEB_PORT_80
+        bind 192.168.37.17:80
+        #balance first
+        #balance source
+        #hash-type consistent
+        balance uri
+        mode http
+        option forwardfor
+        server web1 192.168.37.27:80 check weight 3  inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;测试效果，访问指定的uri路径文件：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17~]#curl http://192.168.37.17/app/test1.html
+192.168.37.37 RS1
+</pre>
+</div>
+<p><strong>4、url_param：</strong><br>对用户请求的url中的&lt;params&gt;部分中的参数name作hash计算，并由服务器总权重相除以后派发至某挑出的服务器；通常用于追踪用户，以确保来自同一个用户的请求始终发往同一个Backend Server</p>
+<p>假设url= http://www.magedu.com/foo/bar/index.php?k1=v1&amp;k2=v2</p>
+<p><strong>则：</strong><br><strong>host = "www.magedu.com"</strong><br><strong>url_param= "k1=v1&amp;k2=v2"</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen WEB_PORT_80
+        bind 192.168.37.17:80  # haproxy调度器IP地址
+        #balance first
+        #balance source
+        #hash-type consistent
+        #balance uri
+        balance url_param name  定义name值
+        mode http  #不支持tcp模式，会切换至tcp的roundrobin负载模式
+        option forwardfor
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5  # 后端服务器IP地址
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5</pre>
+</div>
+<p>测试效果，定义的name=的值就会默认访问一个IP地址，不是name=有可能访问另外一个IP地址。</p>
+<p><strong><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223151355796-1843528480.png" alt="" width="658" height="316"></strong></p>
+<p><strong>5、hdr（不常用）</strong></p>
+<p><strong>hdr(&lt;name&gt;)：</strong>针对用户每个http头部(header)请求中的指定信息做hash，此处由&lt;name&gt;指定的http首部将会被取出并做hash计算，然后由服务器总权重相除以后派发至某挑出的服务器，假如无有效的值，则会被轮询调度</p>
+<p>•hdr( Cookie、User-Agent、host )</p>
+<p><strong>6、rdp-cookie对远程桌面的负载，使用cookie保持会话</strong></p>
+<p>•rdp-cookie(&lt;name&gt;)</p>
+<h3>算法总结：</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•roundrobin--------&gt;tcp/http 动态  用的比较多,做四层负载，做过session共享用的最多的调度算法，调度轮询，支持权重分配。
+
+•leastconn-----------&gt;tcp/http 动态  用的比较多，做四层负载均衡，用于后端服务器上MySQL/PHP/HTTPS
+
+•static-rr--------------&gt;tcp/http 静态轮询，等于roundrobin，但是不支持权重。
+
+•first--------------------&gt;tcp/http 静态，很少使用
+
+•source----------------&gt;tcp/http    取决于hash_type是否consistent，后端服务器没有seesion共享，但是还要实现会话保持
+
+•Uri----------------------&gt;http       取决于hash_type是否consistent，缓存场景，CDN缓存服务器，七层。
+
+•url_param----------&gt;http          取决于hash_type是否consistent，缓存场景，七层
+
+•hdr---------------------&gt;http      取决于hash_type是否consistent，基于请求头部指定的信息做调度，七层模式。
+
+•rdp-cookie---------&gt;tcp         取决于hash_type是否consistent，windows远程桌面，很少使用，四层。</pre>
+</div>
+<h3>什么时候用四层，什么时候用七层？</h3>
+<p>在haproxy对用户的请求报文，响应报文，不做响应处理，只做转发作用时，就用四层，通常情况，使用四层做负载。</p>
+<p>在haproxy匹配头部信息，匹配某个字段，在做头部报文处理，需要用七层，七层做负载均衡，会对头部报文处理，会影响转发性能。</p>
+<h3>四层与七层的区别：　　</h3>
+<p><strong>四层：</strong></p>
+<p>•在四层负载设备中，把client发送的报文目标地址(原来是负载均衡设备的IP地址)，根据均衡设备设置的选择web服务器的规则选择对应的web服务器IP地址，这样client就可以直接跟此服务器建立TCP连接并发送数据。</p>
+<p>　<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223162242341-2009645847.png" alt=""></p>
+<p><strong>七层：</strong><br>•七层负载均衡服务器起了一个代理服务器的作用，服务器建立一次TCP连接要三次握手，而client要访问webserver要先与七层负载设备进行三次握手后建立TCP连接，把要访问的报文信息发送给七层负载均衡；然后七层负载均衡再根据设置的均衡规则选择特定的webserver，然后通过三次握手与此台webserver建立TCP连接，然后webserver把需要的数据发送给七层负载均衡设备，负载均衡设备再把数据发送给client；所以，七层负载均衡设备起到了代理服务器的作用。</p>
+<h3>&nbsp;七层IP透传：</h3>
+<p><strong>（1）分析：</strong>后端收到服务的请求是haproxy的，所以日志记录的请求ip也是haproxy的；如我们想要记录真实client 的ip，需加forwardfor 选项；</p>
+<p>&nbsp;在由haproxy 发往后端主机的请求报文中添加"X-Forwarded-For" 首部，其值为前端客户端的地址；用于向后端主发送真实的客户端IP。</p>
+<p><strong>（2）格式</strong></p>
+<p><strong>option forwardfor</strong>&nbsp;[ except &lt;network&gt; ] [ header &lt;name&gt; ] [ if-none ]</p>
+<p>[ except &lt;network&gt; ] ：请求报请来自此处指定的网络时不予添加此首部，如haproxy 自身所在网络</p>
+<p>[<strong>&nbsp;header</strong>&nbsp;&lt;name&gt; ] ：使用自定义的首部名称，而非<strong>默认的"X-Forwarded-For"</strong></p>
+<p>[ if-none ] 如果没有首部才添加首部，如果有使用默认值</p>
+<h4><strong>七层负载：</strong></h4>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen web_prot_http_nodes
+  bind 192.168.7.102:80  # haproxy主机的IP地址
+  mode http
+  option forwardfor  IP地址透传
+  server web1 blogs.studylinux.net:80 check inter 3000 fall 3 rise 5 # 调度到后端服务器上</pre>
+</div>
+<p>确保nginx的日志格式为json格式：以下是nginx的json日志格式</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">http { 
+   log_format access_json '{"@timestamp":"$time_iso8601",'
+        '"host":"$server_addr",'
+        '"clientip":"$remote_addr",'
+        '"size":$body_bytes_sent,'
+        '"responsetime":$request_time,'
+        '"upstreamtime":"$upstream_response_time",'
+        '"upstreamhost":"$upstream_addr",'
+        '"http_host":"$host",'
+        '"uri":"$uri",'
+        '"domain":"$host",'
+        '"xff":"$http_x_forwarded_for",'
+        '"referer":"$http_referer",'
+        '"tcp_xff":"$proxy_protocol_addr",'
+        '"http_user_agent":"$http_user_agent",'
+        '"status":"$status"}';
+    access_log  /var/log/nginx/access.log  access_json;</pre>
+</div>
+<p>查看nginx的访问日志就可以收集到client的IP地址：<strong> tail -f&nbsp; /var/log/nginx/access.log</strong></p>
+<p><strong><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223164101994-78809698.png" alt="" width="1330" height="187"></strong></p>
+<h4><strong>&nbsp;四层负载：</strong></h4>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen web_prot_http_nodes
+   bind 192.168.7.102:80 # haproxy调度器IP地址
+   mode tcp
+   server web2 blogs.studylinux.net:80 send-proxy check inter 3000 fall 3 rise 5</pre>
+</div>
+<p>Nginx配置：需要在nginx配置文件中加入以下两部分内容，并将nginx的日志格式改为json格式。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen 80 proxy_protocol; # 加入proxy_protocol选项
+'"tcp_xff":"$proxy_protocol_addr",' #TCP获取客户端真实IP日志格式，需要添加两个配置选项。</pre>
+</div>
+<p>查看nginx的访问日志就可以收集到client的IP地址： tail -f&nbsp; /var/log/nginx/access.log</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191223164118735-979640603.png" alt="" width="1161" height="164"></p>
+<h3>Cookie 配置（生产中可以基于haproxy均衡调度到后端服务器）　　</h3>
+<p><strong>cookie</strong>&nbsp;&lt;value&gt;：为指定server设定cookie值，此处指定的值将在请求入站时被检查，第一次为此值挑选的server将在后续的请求中被选中，其<strong>目的在于实现持久连接的功能</strong>；　</p>
+<p>cookie &lt;value&gt;：为当前server指定cookie值，实现基于cookie的会话黏性</p>
+<p>cookie &lt;name&gt; [ rewrite | insert | prefix ] [ indirect ] [ nocache ] [ postonly ] [ preserve ] [ httponly ] [ secure ] [ domain &lt;domain&gt; ]* [ maxidle &lt;idle&gt; ] [ maxlife &lt;life&gt; ]</p>
+<p><strong>&lt;name&gt;：cookie名称，用于实现持久连接，<span style="color: rgba(255, 0, 0, 1)">可以解决一直同时调度到同一台主机的问题。</span></strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">rewrite：重写
+insert：插入
+prefix：前缀
+nocache：当client和hapoxy之间有缓存时，不缓存cookie
+</pre>
+</div>
+<p><strong>基于cookie实现的session 保持：</strong></p>
+<p><strong>实现原理：首先以轮询的方式第一次给访问用户分配服务器，并给用户发放cookie值，然后用户再次访问时，就会携带cookie值，调度器会区分cookie值，将用户调度到后端服务器，实现cookie的会话黏性。</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen WEB_PORT_80
+        bind 192.168.37.17:80
+　　 　　balance roundrobin  # 以轮询的方式先对用户发放cookie值。
+        mode http
+        cookie SERVER-COOKIE  insert  indirect  nocache  #先定义，下边才能使用，insert报文首部，nocache 不缓存cookie，其中SERVER-COKIE名称可以自定义。
+        server web1 192.168.37.27:80 cookie web-27 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 cookie web-37 check inter 3000 fall 3 rise 5</pre>
+</div>
+<p><strong>用curl命令验证cookie会话保持状态：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@mysql2 ~]# curl --cookie "SERVER-COOKIE=web1-27" http://192.168.37.27/index.html
+192.168.7.103
+[root@mysql2 ~]# curl --cookie "SERVER-COOKIE=web1-37" http://192.168.37.37/index.html</pre>
+</div>
+<h3>配置HAProxy状态页，监测web页面　　</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•stats enable        #基于默认的参数启用stats page
+•stats hide-version    # 隐藏版本
+•stats refresh &lt;delay&gt; # 设定自动刷新时间间隔
+•stats uri &lt;prefix&gt;    #自定义stats page uri，默认值：/haproxy?stats
+•stats realm &lt;realm&gt; #账户认证时的提示信息，示例：stats realm : HAProxy\Statistics
+•stats auth &lt;user&gt;:&lt;passwd&gt; #认证时的账号和密码，可使用多次，默认：no authentication
+•stats refresh 5s     #定义页面自动刷新间隔时间
+•stats admin { if | unless } &lt;cond&gt;    #启用stats page中的管理功能　</pre>
+</div>
+<p><strong>示例：</strong></p>
+<p><strong>vim&nbsp; /etc/haproxy/haproxy.cfg</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen stats
+        bind :9527
+        stats enable
+        stats hide-version
+        stats uri /haproxy-status
+        stats realm HAPorxy\Stats\Page
+        stats auth haadmin:123456
+        stats auth admin:123456
+        stats refresh 30s
+        stats admin if TRUE
+</pre>
+</div>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224095729660-301871181.png" alt="" width="482" height="221"></p>
+<p><strong>&nbsp;打开状态页访问：192.168.37.17:9527/haproxy-status</strong></p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224095906190-654465214.png" alt="" width="1177" height="390"></p>
+<h3>验证HAProxy状态页</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">session rate(每秒的连接会话信息)：
+Errors(错误统计信息)：
+cur:每秒的当前会话数量
+Req:错误请求量
+max:每秒新的最大会话数量
+conn:错误链接量
+limit:每秒新的会话限制量
+Resp:错误响应量
+sessions(会话信息)：
+Warnings(警告统计信息)：
+cur:当前会话量
+Retr:重新尝试次数
+max:最大会话量
+Redis:再次发送次数
+limit: 限制会话量
+Total:总共会话量
+Server(real server信息)：
+LBTot:选中一台服务器所用的总时间
+Status:后端机的状态，包括UP和DOWN
+Last：和服务器的持续连接时间
+LastChk:持续检查后端服务器的时间
+Wght:权重
+Bytes(流量统计)：
+Act:活动链接数量
+In:网络的字节输入总量
+Bck:备份的服务器数量
+Out:网络的字节输出总量
+Chk:心跳检测时间
+Dwn:后端服务器连接后都是DOWN的数量
+Denied(拒绝统计信息)：
+Dwntme:总的downtime时间
+Req:拒绝请求量
+Thrtle:server 状态
+Resp:拒绝回复量
+</pre>
+</div>
+<h3>状态页信息</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">pid = 3698 (process #2, nbproc = 2, nbthread = 2) #pid为当前pid号，process为当前进程号，nbproc和nbthread为一共多少进程和每个进程多少个线程
+uptime = 0d 0h00m08s #启动了多长时间
+system limits: memmax = unlimited; ulimit-n = 131124 #系统资源限制：内存/最大打开文件数/
+maxsock = 131124; maxconn = 65536; maxpipes = 0 #最大socket连接数/单进程最大连接数/最大管道数maxpipes
+current conns = 1; current pipes = 0/0; conn rate = 1/sec #当前连接数/当前管道数/当前连接速率
+Running tasks: 1/9; idle = 100 % #运行的任务/当前空闲率
+active UP：#在线服务器backup UP：#标记为backup的服务器
+active UP, going down：#监测未通过正在进入down过程backup UP, going down：#备份服务器正在进入down过程
+active DOWN, going up：#down的服务器正在进入up过程backup DOWN, going up：#备份服务器正在进入up过程
+active or backup DOWN：#在线的服务器或者是backup的服务器已经转换成了down状态not checked：#标记为不监测的服务器
+active or backup DOWN for maintenance (MAINT) #active或者backup服务器认为下线的
+active or backup SOFT STOPPED for maintenance #active或者backup被认为软下线(人为将weight改成0)
+</pre>
+</div>
+<h3>修改报文首部　　</h3>
+<p>在请求报文尾部添加指定报文：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">reqadd&lt;string&gt; [{if | unless} &lt;cond&gt;]#支持条件判断</pre>
+</div>
+<p>在响应报文尾部添加指定报文：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">rspadd&lt;string&gt; [{if | unless} &lt;cond&gt;]
+示例：rspaddX-Via:\HAPorxy</pre>
+</div>
+<p>从请求报文中删除匹配正则表达式的首部</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">reqdel&lt;search&gt; [{if | unless} &lt;cond&gt;]
+reqidel&lt;search&gt; [{if | unless} &lt;cond&gt;] 不分大小写</pre>
+</div>
+<p>从响应报文中删除匹配正则表达式的首部</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">rspdel&lt;search&gt; [{if | unless} &lt;cond&gt;]
+rspidel&lt;search&gt; [{if | unless} &lt;cond&gt;]</pre>
+</div>
+<p>示例：rspidel&nbsp; server.* #从相应报文删除server信息<br>rspidel&nbsp; &nbsp;X-Powered-By:.* #从响应报文删除X-Powered-By信息</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224105512630-1887423882.png" alt=""></p>
+<p>演示：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">listen WEB_PORT_80
+        bind 192.168.37.17:80
+        mode http
+        rspidel Server:.*  删除后端服务器的版本信息
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224105530655-142982610.png" alt="" width="744" height="154"></p>
+<p>&nbsp; 修改前会显示apache的版本号，不安全。</p>
+<p>&nbsp;访问地址：192.168.37.17</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224105636266-434644426.png" alt=""></p>
+<p>&nbsp; 修改后，将会删除对应的Server:.*正则表达式后面的所有字符，隐藏后端服务器的版本号，以防私密泄漏，此时访问时，已经无法看到后端服务器的apache版本号。</p>
+<p>&nbsp; 访问地址：192.168.37.17</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224105819413-560701791.png" alt=""></p>
+<h3>&nbsp;HAProxy 日志配置</h3>
+<p><strong>定义haproxy日志文件路径：</strong></p>
+<p>1、在default配置项定义：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">log 127.0.0.1 local{1-7} info #基于syslog记录日志到指定设备，级别有(err、warning、info、debug)</pre>
+</div>
+<p>2、配置rsyslog：<strong>vim /etc/rsyslog.conf</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">$ModLoad imudp
+$UDPServerRun 514
+local3.* /var/log/haproxy.log</pre>
+</div>
+<p>3、配置HAProxy：<strong>vim /etc/haproxy/haproxy.cfg，在global字段定义log日志级别<br></strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">global
+log         127.0.0.1 local3
+#####################################################
+listen web_port
+bind 127.0.0.1:80
+mode http
+log global
+option tcplog
+server web1 127.0.0.1:8080 check inter 3000 fall 2 rise 5</pre>
+</div>
+<p>4、重启rsyslog服务并访问haproxy状态页</p>
+<h4>自定义记录日志</h4>
+<p><strong>将特定信息记录在日志中(1.8版本不生效)</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">capture cookie &lt;name&gt; len &lt;length&gt;       #捕获请求和响应报文中的cookie并记录日志
+capture request header &lt;name&gt; len &lt;length&gt;   #捕获请求报文中指定的首部内容和长度并记录日志
+capture response header &lt;name&gt; len &lt;length&gt;   #捕获响应报文中指定的内容和长度首部并记录日志</pre>
+</div>
+<p><strong>示例：</strong></p>
+<p>capture request header Host len 256</p>
+<p>capture request header User-Agent len 512</p>
+<h4>实战演示：</h4>
+<p><strong>vim /etc/haproxy/haproxy.cfg</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">#官网业务访问入口=====================================
+listen WEB_PORT_80
+        bind 192.168.37.7:80
+        mode http
+        capture request header Host len 512   
+　　　　 capture request header User-Agent len 512                                                                                                   
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5</pre>
+</div>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224121349689-149082557.png" alt="" width="727" height="164"></p>
+<p>网页版查看访问的host主机的IP地址</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224112420873-747412835.png" alt="" width="754" height="197"></p>
+<p>&nbsp;经过日志分析，也可以捕获到本机的host的IP地址。</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224112602352-1776510876.png" alt="" width="1243" height="338"></p>
+<h3>HAProxy&nbsp;压缩功能</h3>
+<p>•compression&nbsp; &nbsp; algo #启用http协议中的压缩机制，常用算法有gzip deflate</p>
+<p>•compression&nbsp; &nbsp; type #要压缩的类型</p>
+<h4>实战演示：</h4>
+<p><strong>&nbsp; vim&nbsp; /etc/haproxy/haproxy.cfg</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">#官网业务访问入口=====================================
+listen WEB_PORT_80
+        bind 192.168.37.7:80
+        mode http
+        capture request header Host len 512
+        capture request header User-Agent len 512
+        compression algo gzip deflate                                                                                                            
+        compression type text/plain text/html text/css text/xml text/javascript application/javascript
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;访问网页，查看此时支持的<strong>gzip和deflate格式</strong>的压缩：192.168.37.17</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224121512232-712365483.png" alt="" width="720" height="458"></p>
+<h3>Web服务器状态监测&nbsp;</h3>
+<p><strong>三种状态监测方式：</strong></p>
+<p>•基于四层的传输端口做状态监测</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">server 172.18.200.103 172.18.200.103:80 check port 9000 addr 172.18.200.104 inter 3s fall 3 rise 5 weight 1</pre>
+</div>
+<p>•基于指定URI 做状态监测</p>
+<p>•基于指定URI的request请求头部内容做状态监测</p>
+<p><strong>option httpchk</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•option httpchk &lt;uri&gt;
+•option httpchk &lt;method&gt; &lt;uri&gt;
+•option httpchk &lt;method&gt; &lt;uri&gt; &lt;version&gt;</pre>
+</div>
+<p><strong>示例：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•listen web_prot_http_nodes
+•bind 192.168.7.102:80
+•mode http
+•log global
+•option httpchk GET /wp-includes/js/jquery/jquery.js?ver=1.12.4 HTTP/1.0 #基于指定URL
+•#option httpchk HEAD /wp-includes/js/jquery/jquery.js?ver=1.12.4 HTTP/1.0\r\nHost:\192.168.7.102 #通过request获取的头部信息进行匹配进行健康检测，节省很多不必要的网络开销，降低磁盘IO。
+•server 192.168.7.102 blogs.studylinux.net:80 check inter 3000 fall 3 rise 5
+•server 192.168.7.101 192.168.7.101:8080 cookie web1 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<h4>实战演示：　</h4>
+<p><strong>在后端服务器（192.168.37.37）新建一个monitor_page目录，并在目录下创建一个index.html文件。</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos37html]#mkdir /var/www/html/monitor_page
+[root@centos37html]#echo OK &gt;  monitor_page/index.html</pre>
+</div>
+<p><strong>vim&nbsp; /etc/haproxy/haproxy.cfg　</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">#官网业务访问入口=====================================
+listen WEB_PORT_80
+        bind 192.168.37.17:80
+        mode tcp   改为tcp类型，也会从http服务进行访问。
+        rspidel Server:.*
+        #option httpchk GET /monitor_page/index.html  HTTP/1.0
+        option httpchk HEAD  /monitor_page/index.html  HTTP/1.0\r\nHost:\192.168.37.17 生产用，用HEAD模式，可以节省很多不必要的网络开销，降低磁盘IO，声明是从17的IP地址发起的请求。
+        server web1 192.168.37.27:80 check inter 3000 fall 3 rise 5
+        server web2 192.168.37.37:80 check inter 3000 fall 3 rise 5
+</pre>
+</div>
+<p><strong>&nbsp;改为HEAD模式（只获取头部信息，并设置为每五秒监控一次），就不会在后端服务器日志中不会再显示文件大小，节省不必要的网络开销，降低磁盘IO。</strong></p>
+<p><strong><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224143733506-618106309.png" alt="" width="1072" height="263"></strong></p>
+<p><strong>在网页上进行状态页检查，此时可以看到后端服务器（192.168.37.27）没有monitor_page此目录，就会显示down机现象。</strong></p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224142504892-2114095310.png" alt="" width="1188" height="553"></p>
+<h2 id="auto_id_17">HAProxy中的ACL</h2>
+<p><strong>1、ACL定义：</strong></p>
+<p>访问控制列表，用于实现<strong>基于请求报文的首部</strong>、<strong>响应报文的内容</strong>或<strong>其它</strong>的环境状态信息来做出转发决策，这大大增强了其配置弹性。其配置法则<strong>通常分为两步</strong>，首先去<strong>定义ACL&nbsp;</strong>，即定义一个测试条件，而后<strong>在条件得到满足时执行某特定的动作</strong>，如阻止请求或转发至某特定的后端。</p>
+<p>acl：对接收到的报文进行匹配和过滤，基于请求报文头部中的源地址、源端口、目标地址、目标端口、请求方法、URL、文件后缀等信息内容进行匹配并执行进一步操作。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•acl &lt;aclname&gt; &lt;criterion&gt; [flags] [operator] [&lt;value&gt;]
+•acl 名称条件条件标记位具体操作符操作对象类型
+•acl image_service hdr_dom(host) -i img.magedu.com
+•ACL名称，可以使用大字母A-Z、小写字母a-z、冒号：、点.、中横线和下划线，并且严格区分大小写，必须Image_site和image_site完全是两个acl。
+</pre>
+</div>
+<p><strong>2、ACL derivatives :</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">•hdr（[&lt;name&gt; [，&lt;occ&gt;]]）：完全匹配字符串
+•hdr_beg（[&lt;name&gt; [，&lt;occ&gt;]]）：前缀匹配
+•hdr_dir（[&lt;name&gt; [，&lt;occ&gt;]]）：路径匹配
+•hdr_dom（[&lt;name&gt; [，&lt;occ&gt;]]）：域匹配
+•hdr_end（[&lt;name&gt; [，&lt;occ&gt;]]）：后缀匹配
+•hdr_len（[&lt;name&gt; [，&lt;occ&gt;]]）：长度匹配
+•hdr_reg（[&lt;name&gt; [，&lt;occ&gt;]]）：正则表达式匹配
+•hdr_sub（[&lt;name&gt; [，&lt;occ&gt;]]）：子串匹配</pre>
+</div>
+<p><strong>3、&lt;criterion&gt; ：匹配条件</strong></p>
+<p>（1）dst 目标IP</p>
+<p>（2）dst_port 目标PORT</p>
+<p>（3）src 源IP</p>
+<p>（4）src_port 源PORT</p>
+<p class="brush:bash;gutter:true;"><strong>hdr &lt;string&gt;用于测试请求头部首部指定内容</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">hdr_dom(host) 请求的host名称，如www.magedu.com
+hdr_beg(host) 请求的host开头，如www. img. video. download. ftp.
+hdr_end(host) 请求的host结尾，如.com .net .cn
+path_beg      请求的URL开头，如/static、/images、/img、/css
+path_end     请求的URL中资源的结尾，如.gif .png .css .js .jpg .jpeg</pre>
+</div>
+<p><strong>&nbsp;演示：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">frontend web
+        bind 192.168.37.17:80
+        mode http
+#      acl www_web_page hdr_dom(host)  -i www.magedu.net
+#      acl mobile_web_page hdr_dom(host)  -i mobile.magedu.net 
+        acl ip_range_test src 192.168.37.7 192.168.0.0/24   此源IP地址或者IP段访问时，都跳转至后端服务器的192.168.37.27地址上。
+        use_backend web2 if ip_range_test
+        default_backend     backup_web_host
+
+backend web2
+        server web1 192.168.37.27:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+        #server web1 192.168.37.37:80 weight 1 check  port 80 inter 3s fall 3 rise 5</pre>
+</div>
+<p><strong>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224161236921-78858008.png" alt="" width="884" height="389"></strong></p>
+<p>&nbsp;在客户端（192.168.37.7）访问haproxy效果，就会一直访问192.168.37.27地址。</p>
+<p><strong>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224161617106-983917151.png" alt="" width="429" height="130"></strong></p>
+<p>&nbsp;当我们知道客户端的IP地址时，也可以进行拒绝客户端的访问，加上block选项。</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224161944512-2040944115.png" alt="" width="827" height="358"></p>
+<p>&nbsp;查看访问效果，此时客户端被拒绝访问。</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224162039102-58094399.png" alt="" width="511" height="237"></p>
+<p><strong>4、&lt;flags&gt;-条件标记</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">-i 不区分大小写
+-m 使用指定的pattern匹配方法
+-n 不做DNS解析
+-u 禁止acl重名，否则多个同名ACL匹配或关系</pre>
+</div>
+<p><strong>5、[operator]-操作符：</strong></p>
+<p><strong>整数比较：eq、ge、gt、le、lt</strong></p>
+<p>字符比较：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">-exact match (-m str) :字符串必须完全匹配模式
+-substring match (-m sub) :在提取的字符串中查找模式，如果其中任何一个被发现，ACL将匹配
+-prefix match (-m beg) :在提取的字符串首部中查找模式，如果其中任何一个被发现，ACL将匹配
+-suffix match (-m end) :将模式与提取字符串的尾部进行比较，如果其中任何一个匹配，则ACL进行匹配
+-subdirmatch (-m dir) :查看提取出来的用斜线分隔（“/”）的字符串，如果其中任何一个匹配，则ACL进行匹配
+-domain match (-m dom) :查找提取的用点（“.”）分隔字符串，如果其中任何一个匹配，则ACL进行匹配</pre>
+</div>
+<p><strong>6、&lt;value&gt;的类型：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">-Boolean #布尔值false，true
+-integer or integer range #整数或整数范围，比如用于匹配端口范围，1024～32768
+-IP address / network #IP地址或IP范围, 192.168.0.1 ,192.168.0.1/24</pre>
+</div>
+<p><strong>-string用法：</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">exact    –精确比较
+substring  —子串     
+suffix   -后缀比较
+prefix   -前缀比较
+subdir  -路径，    /wp-includes/js/jquery/jquery.js
+domain  -域名，www.magedu.com
+-regular expression     #正则表达式
+-hex block     #16进制</pre>
+</div>
+<h3>&nbsp;实战演示：</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">frontend web
+        bind 192.168.37.17:80
+        mode http
+        acl www_web_page hdr_dom(host)  -i www.magedu.net     访问www.magedu.net时，跳转至192.168.37.27后端服务器
+        acl mobile_web_page hdr_dom(host)  -i mobile.magedu.net  访问mobile.magedu.net时，跳转至192.168.37.37后端服务器
+
+        use_backend pc_web_host if www_web_page
+        use_backend mobile_web_host if mobile_web_page
+        default_backend     backup_web_host   访问其他域名时，默认跳转至192.168.37.47后端服务器。
+
+backend pc_web_host
+        server web1 192.168.37.27:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+        #server web1 192.168.37.37:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+
+backend mobile_web_host
+        #server web1 192.168.37.27:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+        server web1 192.168.37.37:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+
+backend backup_web_host
+        server web1 192.168.37.47:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+</pre>
+</div>
+<p><strong>网页访问效果：</strong></p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224154216889-866289314.png" alt=""></p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224154224520-598391981.png" alt=""></p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224154232802-1071608842.png" alt=""></p>
+<p><strong>7、Acl定义与调用</strong><br>多个acl作为条件时的逻辑关系：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">-与：隐式（默认）使用
+-或：使用“or” 或“||”表示
+-否定：使用“!“ 表示</pre>
+</div>
+<p>示例：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">if valid_src valid_port    #与关系
+if invalid_src || invalid_port  #或
+if ! invalid_src    #非</pre>
+</div>
+<h3>自定义错误页面</h3>
+<p><strong>支持200, 400, 403, 408, 500, 502, 503, 504.</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">errorfile 500 /usr/local/haproxy/html/500.html     #自定义错误页面跳转
+errorfile 502 /usr/local/haproxy/html/502.html
+errorfile 503 /usr/local/haproxy/html/503.html</pre>
+</div>
+<p><strong>自定义错误跳转，直接跳转到指定的服务器IP地址上，此IP地址需要是公网IP，并让其客户端能够访问，否则无法跳转。</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">errorloc 503 http://192.168.37.27/error_page/503.html
+</pre>
+</div>
+<p><strong>实战演一：</strong></p>
+<p>直接在HAProxy机器上创建自定义的错误页面。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">errorfile 500 /usr/local/haproxy/html/500.html
+errorfile 502 /usr/local/haproxy/html/502.html
+errorfile 503 /usr/local/haproxy/html/503.html
+frontend web
+        bind 192.168.37.17:80
+        mode http
+        acl www_web_page hdr_dom(host)  -i www.magedu.net
+        use_backend mobile_web_host if www_web_page
+        default_backend     backup_web_host
+
+backend mobile_web_host
+        #server web1 192.168.37.27:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+        server web1 192.168.37.37:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+
+backend backup_web_host
+        server web1 192.168.37.47:80 weight 1 check  port 80 inter 3s fall 3 rise 5
+</pre>
+</div>
+<p>&nbsp;&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224174348772-1480760397.png" alt="" width="641" height="470"></p>
+<p>&nbsp;&nbsp;然后创建错误页面目录及文件</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos_17html]#mkdir /usr/local/haproxy/html
+[root@centos_17html]#cd /usr/local/haproxy/html/
+[root@centos_17html]#echo error 503 &gt;  503.html
+[root@centos_17html]#echo error 502 &gt;  502.html
+[root@centos_17html]#echo error 500 &gt;  500.html</pre>
+</div>
+<p>&nbsp;访问网页：</p>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224174607232-1870780192.png" alt="" width="334" height="120"></p>
+<p><strong>实战演示二：</strong></p>
+<p><strong>自定义错误跳转，直接跳转到指定的服务器URL上，此IP地址需要是公网域名，并让其客户端能够访问，否则无法跳转。</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">errorloc 503 http://192.168.37.37/error_page/503.html   指定跳转至192.168.37.37的服务器上。</pre>
+</div>
+<p>&nbsp;<img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224174814076-2045658484.png" alt="" width="584" height="251"></p>
+<p>&nbsp;在后端要跳转的服务器上创建一个错误提示：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:bash;gutter:true;">[root@centos37monitor_page]#mkdir /var/www/html/error_page
+[root@centos37monitor_page]#echo Custerm error 503 &gt; /var/www/html/error_page/503.html</pre>
+</div>
+<p>&nbsp;停止掉要访问的后端服务器：systemctl stop httpd</p>
+<p>&nbsp;验证访问效果：</p>
+<p><img src="https://img2018.cnblogs.com/i-beta/1769223/201912/1769223-20191224181211037-344885702.png" alt="" width="459" height="145"></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>　</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>　　</p>
+<p>　</p>
+<p><br><br></p>
+<p>　</p>
+<p>　　</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>　　</p>
+<p>　</p>
+<p>　</p>
+<p>　</p>
+<p>　　</p>
+</div>
+<div id="MySignature"></div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+    <div id="blog_post_info"></div>
+    <div class="clear"></div>
+    <div id="post_next_prev"></div>
+</div>
+            </div>
+            <div class="postDesc">posted @ 
+<span id="post-date">2019-12-28 18:50</span>&nbsp;
+<a href="https://www.cnblogs.com/struggle-1216/">一叶知秋~~</a>&nbsp;
+阅读(<span id="post_view_count">1119</span>)&nbsp;
+评论(<span id="post_comment_count">0</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=12076000" rel="nofollow">编辑</a>&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(12076000);return false;">收藏</a></div>
+        </div>
+	    
+	    
+    </div><!--end: topics 文章、评论容器-->
+</div>
+<script src="https://common.cnblogs.com/highlight/10.3.1/highlight.min.js"></script>
+<script>markdown_highlight();</script>
+<script>
+    var allowComments = true, cb_blogId = 542898, cb_blogApp = 'struggle-1216', cb_blogUserGuid = '43aea310-db81-446f-ea53-08d7188de755';
+    var cb_entryId = 12076000, cb_entryCreatedDate = '2019-12-28 18:50', cb_postType = 1;
+    updatePostStats(
+        [cb_entryId],
+        function(id, count) { $("#post_view_count").text(count) },
+        function(id, count) { $("#post_comment_count").text(count) })
+</script>
+<a name="!comments"></a>
+<div id="blog-comments-placeholder"></div>
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+    <div id="comment_form_container"></div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+    <div id="ad_t2"></div>
+    <div id="opt_under_post"></div>
+    <div id="cnblogs_c1" class="c_ad_block">
+        <div id='div-gpt-ad-1592365906576-0' style='width: 300px; height: 250px;'></div>
+    </div>
+    <div id="under_post_news"></div>
+    <div id="cnblogs_c2" class="c_ad_block">
+        <div id='div-gpt-ad-1592366332455-0' style='width: 468px; height: 60px;'></div>
+    </div>
+    <div id="under_post_kb"></div>
+    <div id="HistoryToday" class="c_ad_block"></div>
+    <script type="text/javascript">
+       var commentManager = new blogCommentManager();
+       commentManager.renderComments(0);
+       fixPostBody();
+       deliverBigBanner();
+setTimeout(function() { incrementViewCount(cb_entryId); }, 50);       deliverT2();
+       deliverC1C2();
+       loadNewsAndKb();
+       loadBlogSignature();
+LoadPostCategoriesTags(cb_blogId, cb_entryId);       LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+       GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+       loadOptUnderPost();
+       GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+   </script>
+</div>
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+	<div id="sideBar">
+		<div id="sideBarMain">
+			<div id="sidebar_news" class="newsItem">
+            <script>loadBlogNews();</script>
+</div>
+<div id="sidebar_c3"></div>
+			<div id="blog-calendar" style="display:none"></div><script>loadBlogDefaultCalendar();</script>			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"></div>
+                    <script>loadBlogSideColumn();</script>
+			</div>			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		<!--done-->
+Copyright &copy; 2020 一叶知秋~~
+<br /><span id="poweredby">Powered by .NET 5.0.0 on Kubernetes</span>
+
+
+
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+
+
+    
+</body>
+</html>
